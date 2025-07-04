@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .button-container {
+            margin-top: 40px;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-view {
+            background-color: #27ae60;
+        }
+
+        .btn-view:hover {
+            background-color: #1e8449;
+        }
+
+        .btn-dashboard {
+            background-color: #777;
+        }
+
+        .btn-dashboard:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>👥 User Management Portal</h1>
+
+    <div class="button-container">
+        <button class="btn" onclick="window.location.href='/api/users/create'">➕ Add User</button>
+        <button class="btn btn-delete" onclick="window.location.href='/api/users/delete'">🗑️ Delete User</button>
+        <button class="btn btn-view" onclick="window.location.href='/api/users/allview'">📋 View All Users</button>
+    </div>
+
+    <div class="button-container">
+        <button class="btn btn-dashboard" onclick="window.location.href='/dashboard'">🏠 Back to Dashboard</button>
+    </div>
+
+</body>
+</html>

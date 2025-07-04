@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Issued Book Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+            padding-top: 40px;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 90%;
+            background: white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+
+        th {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .btn-back {
+            background-color: #777;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 5px;
+        }
+
+        .btn-back:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📋 Issued Book Records</h1>
+
+    <table id="loanTable">
+        <thead>
+            <tr>
+                <th>Loan ID</th>
+                <th>User ID</th>
+                <th>Book ID</th>
+                <th>Issued Date</th>
+                <th>Expected Return</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <a href="/api/loans/issue" class="btn-back">⬅️ Back to Issue Page</a>
+
+    <script>
+        fetch("/api/loans")
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.querySelector("#loanTable tbody");
+                data.forEach(loan => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${loan.id}</td>
+                        <td>${loan.userId}</td>
+                        <td>${loan.bookId}</td>
+                        <td>${loan.issueDate || '-'}</td>
+                        <td>${loan.expectedReturnDate || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => {
+                console.error("Error loading loans:", err);
+                const tbody = document.querySelector("#loanTable tbody");
+                tbody.innerHTML = `<tr><td colspan="5" style="color:red;">❌ Failed to load records</td></tr>`;
+            });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Issue Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            text-align: center;
+            padding-top: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .form-container {
+            display: none;
+            margin-top: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .info {
+            margin-top: 10px;
+            font-weight: bold;
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .issue-btn {
+            margin-top: 25px;
+            background-color: green;
+        }
+
+        .issue-btn:hover {
+            background-color: darkgreen;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📖 Book Issue Portal</h1>
+
+    <button class="btn" onclick="showForm()">📖 Issue a Book</button>
+    <button class="btn" onclick="window.location.href='/api/loans/issue-records'">📋 View Issued Records</button>
+
+    <div class="form-container" id="issueForm">
+        <h2>Issue Book</h2>
+
+        <input type="text" id="userId" placeholder="Enter User ID" onblur="fetchUserName()" />
+        <div id="userNameDisplay" class="info"></div>
+
+        <input type="text" id="bookId" placeholder="Enter Book ID" onblur="fetchBookTitle()" />
+        <div id="bookTitleDisplay" class="info"></div>
+
+        <button class="btn issue-btn" onclick="issueBook()">✅ Confirm Issue</button>
+        <div id="messageBox"></div>
+    </div>
+
+    <script>
+        function showForm() {
+            document.getElementById("issueForm").style.display = "block";
+        }
+
+        function fetchUserName() {
+            const userId = document.getElementById("userId").value;
+            if (!userId) return;
+
+            fetch(`/api/users/${userId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("User not found");
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById("userNameDisplay").innerText = `👤 User: ${data.name}`;
+                })
+                .catch(err => {
+                    console.error("Error fetching user:", err);
+                    document.getElementById("userNameDisplay").innerHTML = `<span class="error">❌ User not found</span>`;
+                });
+        }
+
+        function fetchBookTitle() {
+            const bookId = document.getElementById("bookId").value;
+            if (!bookId) return;
+
+            fetch(`/api/books/${bookId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Book not found");
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById("bookTitleDisplay").innerText = `📚 Book: ${data.title}`;
+                })
+                .catch(err => {
+                    console.error("Error fetching book:", err);
+                    document.getElementById("bookTitleDisplay").innerHTML = `<span class="error">❌ Book not found</span>`;
+                });
+        }
+
+        function issueBook() {
+            const userId = document.getElementById("userId").value;
+            const bookId = document.getElementById("bookId").value;
+            const messageBox = document.getElementById("messageBox");
+
+            messageBox.innerHTML = "";
+
+            if (!userId || !bookId) {
+                messageBox.innerHTML = `<div class="error">⚠️ Please enter both User ID and Book ID</div>`;
+                return;
+            }
+
+            fetch('/api/loans/issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId, bookId: bookId })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text); });
+                }
+                return res.json();
+            })
+            .then(data => {
+                messageBox.innerHTML = `<div class="info">✅ Book issued successfully!<br>Loan ID: <b>${data.id}</b><br>Due: ${data.expectedReturnDate}</div>`;
+            })
+            .catch(err => {
+                console.error("❌ Issue failed:", err);
+                messageBox.innerHTML = `<div class="error">❌ Failed to issue book<br>${err.message}</div>`;
+            });
+        }
+    </script>
+
+</body>
+</html>

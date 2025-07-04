@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Return Books</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background: #f0f0f0;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 200px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 90%;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-return {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-return:hover {
+            background-color: #1e8449;
+        }
+
+        .btn-back {
+            background-color: #777;
+            color: white;
+            margin-top: 30px;
+            padding: 10px 20px;
+            display: inline-block;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .btn-back:hover {
+            background-color: #555;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📚 Return Issued Books</h1>
+
+    <input type="text" id="loanIdFilter" placeholder="Filter by Loan ID" oninput="filterLoans()" />
+
+    <table id="loanTable">
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Loan ID</th>
+                <th>User ID</th>
+                <th>Book ID</th>
+                <th>Issued Date</th>
+                <th>Return Date</th>
+                <th>Expected Return</th>
+                <th>Fine</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <a href="/dashboard" class="btn-back">⬅️ Back to Dashboard</a>
+
+    <script>
+        let allLoans = [];
+
+        function loadLoans() {
+            fetch("/api/loans")
+                .then(res => res.json())
+                .then(data => {
+                    allLoans = data;
+                    renderLoans(data);
+                })
+                .catch(err => {
+                    console.error("Error loading loans:", err);
+                    document.querySelector("#loanTable tbody").innerHTML =
+                        `<tr><td colspan="8" style="color:red;">❌ Failed to load data</td></tr>`;
+                });
+        }
+
+        function renderLoans(loans) {
+            const tbody = document.querySelector("#loanTable tbody");
+            tbody.innerHTML = "";
+            loans.forEach(loan => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>
+                        ${loan.returnDate ? `<span class="status">✅ Returned</span>` : `<button class="btn btn-return" onclick="returnBook(${loan.id}, this)">Return</button>`}
+                    </td>
+                    <td>${loan.id}</td>
+                    <td>${loan.userId}</td>
+                    <td>${loan.bookId}</td>
+                    <td>${loan.issueDate || '-'}</td>
+                    <td class="return-date">${loan.returnDate || '-'}</td>
+                    <td>${loan.expectedReturnDate || '-'}</td>
+                    <td class="fine">${loan.fine ?? 0}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function returnBook(loanId, btn) {
+            fetch(`/api/loans/return/${loanId}`, {
+                method: "POST"
+            })
+            .then(res => {
+                if (!res.ok) return res.text().then(t => { throw new Error(t); });
+                return res.json();
+            })
+            .then(data => {
+                const row = btn.closest("tr");
+                row.querySelector(".return-date").textContent = data.returnDate;
+                row.querySelector(".fine").textContent = data.fine ?? 0;
+                btn.outerHTML = `<span class="status">✅ Returned</span>`;
+            })
+            .catch(err => {
+                alert("❌ Failed to return book\n" + err.message);
+                console.error("Return error:", err);
+            });
+        }
+
+        function filterLoans() {
+            const filterId = document.getElementById("loanIdFilter").value.trim();
+            if (!filterId) {
+                renderLoans(allLoans);
+            } else {
+                const filtered = allLoans.filter(l => l.id.toString() === filterId);
+                renderLoans(filtered);
+            }
+        }
+
+        loadLoans();
+    </script>
+
+</body>
+</html>

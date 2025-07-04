@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f3;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .form-container {
+            background-color: white;
+            width: 400px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        input[type="text"], select {
+            width: 90%;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>➕ Create a New Book</h1>
+
+    <div class="form-container">
+        <input type="text" id="title" placeholder="Book Title" required />
+        <input type="text" id="author" placeholder="Author" required />
+        <input type="text" id="isbn" placeholder="ISBN" required />
+        
+        <select id="available">
+            <option value="true">Available</option>
+            <option value="false">Not Available</option>
+        </select>
+
+        <button class="btn" onclick="createBook()">📘 Add Book</button>
+        <div id="messageBox" class="message"></div>
+    </div>
+
+    <script>
+        function createBook() {
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const isbn = document.getElementById('isbn').value;
+            const available = document.getElementById('available').value === "true";
+            const messageBox = document.getElementById('messageBox');
+
+            messageBox.innerHTML = "";
+
+            if (!title || !author || !isbn) {
+                messageBox.innerHTML = `<div class="error">⚠️ All fields are required</div>`;
+                return;
+            }
+
+            fetch("/api/books", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: title,
+                    author: author,
+                    isbn: isbn,
+                    available: available
+                })
+            })
+            .then(res => {
+                if (!res.ok) return res.text().then(text => { throw new Error(text); });
+                return res.json();
+            })
+            .then(data => {
+                messageBox.innerHTML = `<div class="success">✅ Book added! ID: ${data.id}</div>`;
+                document.getElementById('title').value = "";
+                document.getElementById('author').value = "";
+                document.getElementById('isbn').value = "";
+                document.getElementById('available').value = "true";
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                messageBox.innerHTML = `<div class="error">❌ Failed to add book<br>${err.message}</div>`;
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Delete User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding-top: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            margin: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-search {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-back {
+            background-color: #777;
+            color: white;
+        }
+
+        table {
+            margin: 30px auto;
+            border-collapse: collapse;
+            width: 90%;
+            background: white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+
+        th {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            font-weight: bold;
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🗑️ Delete User</h1>
+
+    <input type="text" id="searchId" placeholder="Enter User ID to search" />
+    <button class="btn-search" onclick="searchUser()">🔍 Search</button>
+
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <a href="/userview" class="btn-back">⬅️ Back to User Dashboard</a>
+
+    <script>
+        function loadAllUsers() {
+            fetch("/api/users")
+                .then(res => res.json())
+                .then(data => {
+                    populateTable(data);
+                });
+        }
+
+        function populateTable(users) {
+            const tbody = document.querySelector("#userTable tbody");
+            tbody.innerHTML = "";
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="error">No users found</td></tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td><button class="btn-delete" onclick="deleteUser(${user.id})">❌ Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function searchUser() {
+            const id = document.getElementById("searchId").value;
+            if (!id) {
+                loadAllUsers();
+                return;
+            }
+
+            fetch(`/api/users/${id}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("User not found");
+                    return res.json();
+                })
+                .then(user => {
+                    populateTable([user]);
+                })
+                .catch(() => {
+                    const tbody = document.querySelector("#userTable tbody");
+                    tbody.innerHTML = `<tr><td colspan="5" class="error">❌ User not found</td></tr>`;
+                });
+        }
+
+        function deleteUser(id) {
+            if (!confirm("Are you sure you want to delete this user?")) return;
+
+            fetch(`/api/users/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to delete");
+                alert("✅ User deleted successfully!");
+                loadAllUsers();
+            })
+            .catch(() => {
+                alert("❌ Failed to delete user");
+            });
+        }
+
+        // Load users initially
+        loadAllUsers();
+    </script>
+
+</body>
+</html>

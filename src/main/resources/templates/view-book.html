@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Library - All Books</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            padding-top: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            margin: 6px;
+            font-size: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .form-inline {
+            margin-top: 15px;
+            display: none;
+        }
+
+        input[type="text"], select {
+            padding: 8px;
+            width: 200px;
+            margin: 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .status-true {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-false {
+            color: red;
+            font-weight: bold;
+        }
+
+        .btn-back {
+            background-color: #777;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 5px;
+        }
+
+        .btn-back:hover {
+            background-color: #555;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📚 All Books</h1>
+
+    <div>
+        <button class="btn" onclick="toggleSearch('id')">🔍 By ID</button>
+        <button class="btn" onclick="toggleSearch('isbn')">🔍 By ISBN</button>
+        <button class="btn" onclick="toggleSearch('author')">🔍 By Author</button>
+        <button class="btn" onclick="toggleSearch('available')">🔍 By Availability</button>
+        <button class="btn" onclick="fetchAllBooks()">📃 Show All</button>
+    </div>
+
+    <!-- Search Forms -->
+    <div class="form-inline" id="searchByIdForm">
+        <input type="text" id="searchId" placeholder="Enter Book ID" />
+        <button class="btn" onclick="searchById()">Search</button>
+    </div>
+
+    <div class="form-inline" id="searchByIsbnForm">
+        <input type="text" id="searchIsbn" placeholder="Enter ISBN" />
+        <button class="btn" onclick="searchByIsbn()">Search</button>
+    </div>
+
+    <div class="form-inline" id="searchByAuthorForm">
+        <input type="text" id="searchAuthor" placeholder="Enter Author Name" />
+        <button class="btn" onclick="searchByAuthor()">Search</button>
+    </div>
+
+    <div class="form-inline" id="searchByAvailabilityForm">
+        <select id="searchAvailable">
+            <option value="">Select</option>
+            <option value="true">Available</option>
+            <option value="false">Not Available</option>
+        </select>
+        <button class="btn" onclick="searchByAvailable()">Search</button>
+    </div>
+
+    <div class="message" id="messageBox"></div>
+
+    <table id="bookTable">
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Available</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <a href="/api/books/view" class="btn-back">⬅️ Back to Book Dashboard</a>
+
+    <script>
+        function toggleSearch(type) {
+            document.getElementById("searchByIdForm").style.display = (type === 'id') ? "block" : "none";
+            document.getElementById("searchByIsbnForm").style.display = (type === 'isbn') ? "block" : "none";
+            document.getElementById("searchByAuthorForm").style.display = (type === 'author') ? "block" : "none";
+            document.getElementById("searchByAvailabilityForm").style.display = (type === 'available') ? "block" : "none";
+            document.getElementById("messageBox").innerText = '';
+        }
+
+        function fetchAllBooks() {
+            fetch("/api/books")
+                .then(res => res.json())
+                .then(data => populateTable(data))
+                .catch(() => showError("Failed to load books"));
+        }
+
+        function populateTable(books) {
+            const tbody = document.querySelector("#bookTable tbody");
+            tbody.innerHTML = "";
+
+            if (!books.length) {
+                tbody.innerHTML = `<tr><td colspan="5">No books found</td></tr>`;
+                return;
+            }
+
+            books.forEach(book => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${book.id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.isbn}</td>
+                    <td class="${book.available ? 'status-true' : 'status-false'}">${book.available}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function searchById() {
+            const id = document.getElementById("searchId").value;
+            if (!id) return;
+            fetch(`/api/books/${id}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => populateTable([data]))
+                .catch(() => showError("❌ Book not found by ID"));
+        }
+
+        function searchByIsbn() {
+            const isbn = document.getElementById("searchIsbn").value;
+            if (!isbn) return;
+            fetch(`/api/books/isbn/${isbn}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => populateTable([data]))
+                .catch(() => showError("❌ Book not found by ISBN"));
+        }
+
+        function searchByAuthor() {
+            const author = document.getElementById("searchAuthor").value;
+            if (!author) return;
+            fetch(`/api/books/author/${author}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => populateTable(data))
+                .catch(() => showError("❌ No books found for that author"));
+        }
+
+        function searchByAvailable() {
+            const available = document.getElementById("searchAvailable").value;
+            if (available === "") return;
+            fetch(`/api/books/available/${available}`)
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => populateTable(data))
+                .catch(() => showError("❌ No books found by availability"));
+        }
+
+        function showError(msg) {
+            document.getElementById("messageBox").innerHTML = `<span style="color:red;">${msg}</span>`;
+            document.querySelector("#bookTable tbody").innerHTML = "";
+        }
+
+        // Load all books initially
+        fetchAllBooks();
+    </script>
+
+</body>
+</html>

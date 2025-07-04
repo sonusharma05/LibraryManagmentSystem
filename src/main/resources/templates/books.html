@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .button-container {
+            margin-top: 40px;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-view {
+            background-color: #27ae60;
+        }
+
+        .btn-view:hover {
+            background-color: #1e8449;
+        }
+
+        .btn-dashboard {
+            background-color: #777;
+            margin-top: 50px;
+        }
+
+        .btn-dashboard:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📚 Book Management Portal</h1>
+
+    <div class="button-container">
+        <button class="btn" onclick="window.location.href='/api/books/create'">➕ Create Book</button>
+        <button class="btn btn-delete" onclick="window.location.href='/api/books/delete'">🗑️ Delete Book</button>
+        <button class="btn btn-view" onclick="window.location.href='/api/books/allview'">📖 View Books</button>
+    </div>
+
+    <div class="button-container">
+        <button class="btn btn-dashboard" onclick="window.location.href='/dashboard'">🏠 Back to Dashboard</button>
+    </div>
+
+</body>
+</html>

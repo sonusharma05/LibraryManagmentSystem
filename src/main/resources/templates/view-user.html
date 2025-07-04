@@ -1,0 +1,88 @@
+<!-- all-users-view.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>View Users</title>
+    <style>
+        body { font-family: Arial; text-align: center; background-color: #f0f0f0; padding: 40px; }
+        table { margin: 20px auto; border-collapse: collapse; width: 90%; background: white; }
+        th, td { border: 1px solid #ccc; padding: 10px; }
+        th { background-color: #4285f4; color: white; }
+        input { margin: 10px; padding: 10px; width: 200px; }
+        .btn { padding: 10px 20px; border: none; background-color: #27ae60; color: white; border-radius: 5px; }
+        .btn:hover { background-color: #1e8449; }
+    </style>
+</head>
+<body>
+    <h1>📋 All Users</h1>
+
+    <div>
+        <input type="text" id="searchId" placeholder="Search by ID">
+        <button class="btn" onclick="searchById()">🔍</button>
+
+        <input type="text" id="searchEmail" placeholder="Search by Email">
+        <button class="btn" onclick="searchByEmail()">🔍</button>
+
+        <input type="text" id="searchName" placeholder="Search by Name">
+        <button class="btn" onclick="searchByName()">🔍</button>
+    </div>
+
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        function loadAllUsers() {
+            fetch('/api/users')
+                .then(res => res.json())
+                .then(data => renderUsers(data));
+        }
+
+        function searchById() {
+            const id = document.getElementById('searchId').value;
+            fetch(`/api/users/${id}`)
+                .then(res => res.json())
+                .then(data => renderUsers([data]));
+        }
+
+        function searchByEmail() {
+            const email = document.getElementById('searchEmail').value;
+            fetch(`/api/users/email/${email}`)
+                .then(res => res.json())
+                .then(data => renderUsers([data]));
+        }
+
+        function searchByName() {
+            const name = document.getElementById('searchName').value;
+            fetch(`/api/users/name/${name}`)
+                .then(res => res.json())
+                .then(data => renderUsers(data));
+        }
+
+        function renderUsers(users) {
+            const tbody = document.querySelector("#userTable tbody");
+            tbody.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        loadAllUsers();
+    </script>
+</body>
+</html>
