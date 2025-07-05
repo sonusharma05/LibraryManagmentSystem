@@ -38,6 +38,10 @@ public class UserUiController {
 		 return "delete-user.html";
 		 
 	 }
+	 @GetMapping("/update")
+	 public String updateUser() {
+		 return "userUpdate.html";
+	 }
 	 
 
 }

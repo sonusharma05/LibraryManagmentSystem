@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Update Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .form-container {
+            background: white;
+            width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.2);
+        }
+
+        input, select {
+            width: 90%;
+            padding: 10px;
+            margin: 12px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 0 5%;
+        }
+
+        .toggle-label {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 25px;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 2.5px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        input[type="text"]:disabled {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h1>✏️ Update Book</h1>
+
+<div class="form-container">
+    <input type="text" id="searchValue" placeholder="Enter Book ID, ISBN, or Title" />
+    <button class="btn" onclick="searchBook()">🔍 Search</button>
+    <div id="searchMessage" class="message"></div>
+</div>
+
+<div class="form-container" id="editSection" style="display: none;">
+    <input type="hidden" id="bookId" />
+
+    <input type="text" id="title" placeholder="Title" disabled />
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit Title</span>
+        <label class="switch"><input type="checkbox" id="toggleTitle" onchange="toggleField('title')"><span class="slider"></span></label>
+    </div>
+
+    <input type="text" id="author" placeholder="Author" disabled />
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit Author</span>
+        <label class="switch"><input type="checkbox" id="toggleAuthor" onchange="toggleField('author')"><span class="slider"></span></label>
+    </div>
+
+    <input type="text" id="isbn" placeholder="ISBN" disabled />
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit ISBN</span>
+        <label class="switch"><input type="checkbox" id="toggleIsbn" onchange="toggleField('isbn')"><span class="slider"></span></label>
+    </div>
+
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Available</span>
+        <label class="switch"><input type="checkbox" id="available"><span class="slider"></span></label>
+    </div>
+
+    <button class="btn" onclick="updateBook()">✅ Update Book</button>
+    <div id="updateMessage" class="message"></div>
+</div>
+
+<script>
+    function toggleField(fieldId) {
+        document.getElementById(fieldId).disabled = !document.getElementById(`toggle${capitalize(fieldId)}`).checked;
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function searchBook() {
+        const val = document.getElementById("searchValue").value.trim();
+        const msg = document.getElementById("searchMessage");
+        const section = document.getElementById("editSection");
+        const updateMsg = document.getElementById("updateMessage");
+
+        section.style.display = "none";
+        msg.innerHTML = "";
+        updateMsg.innerHTML = "";
+
+        if (!val) {
+            msg.innerHTML = `<div class="error">❌ Please enter a value to search</div>`;
+            return;
+        }
+
+        function display(book) {
+            document.getElementById("bookId").value = book.id;
+            document.getElementById("title").value = book.title;
+            document.getElementById("author").value = book.author;
+            document.getElementById("isbn").value = book.isbn;
+            document.getElementById("available").checked = book.available;
+
+            // Reset toggles
+            ['title', 'author', 'isbn'].forEach(id => {
+                document.getElementById(id).disabled = true;
+                document.getElementById(`toggle${capitalize(id)}`).checked = false;
+            });
+
+            section.style.display = "block";
+        }
+
+        // Try ID → ISBN → Title
+        fetch(`/api/books/${val}`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(book => display(book))
+            .catch(() => {
+                fetch(`/api/books/isbn/${val}`)
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(book => display(book))
+                    .catch(() => {
+                        fetch(`/api/books/title/${val}`)
+                            .then(r => r.ok ? r.json() : Promise.reject())
+                            .then(data => {
+                                const book = Array.isArray(data) ? data[0] : data;
+                                if (!book) throw new Error();
+                                display(book);
+                            })
+                            .catch(() => {
+                                msg.innerHTML = `<div class="error">❌ Book not found</div>`;
+                            });
+                    });
+            });
+    }
+
+    function updateBook() {
+        const id = document.getElementById("bookId").value;
+        const title = document.getElementById("title").value;
+        const author = document.getElementById("author").value;
+        const isbn = document.getElementById("isbn").value;
+        const available = document.getElementById("available").checked;
+        const updateMsg = document.getElementById("updateMessage");
+
+        updateMsg.innerHTML = "";
+
+        if (!id || !title || !author || !isbn) {
+            updateMsg.innerHTML = `<div class="error">❌ All fields must be filled</div>`;
+            return;
+        }
+
+        fetch(`/api/books/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, author, isbn, available })
+        })
+        .then(res => {
+            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+            return res.json();
+        })
+        .then(data => {
+            updateMsg.innerHTML = `<div class="success">✅ Book updated successfully</div>`;
+        })
+        .catch(err => {
+            updateMsg.innerHTML = `<div class="error">❌ Failed to update<br>${err.message}</div>`;
+        });
+    }
+</script>
+
+</body>
+</html>

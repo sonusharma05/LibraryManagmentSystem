@@ -33,6 +33,11 @@ public class BookUiController {
 	public String deleteBook() {
 		return"delete-book.html";
 	}
+	@GetMapping("/update")
+	public String updateBook() {
+		return "bookUpdate.html";
+		
+	}
 	
 
 }

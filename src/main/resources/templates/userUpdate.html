@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Update User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .form-container {
+            background-color: white;
+            width: 400px;
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.2);
+        }
+
+        input, select {
+            width: 90%;
+            padding: 10px;
+            margin: 12px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #2a6ad9;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success { color: green; }
+        .error { color: red; }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-weight: bold;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 25px;
+            transition: 0.4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 2.5px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        input[disabled] {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h1>👤 Update User</h1>
+
+<div class="form-container">
+    <input type="text" id="searchValue" placeholder="Enter User ID, Email, or Name">
+    <button class="btn" onclick="searchUser()">🔍 Search</button>
+    <div id="searchMessage" class="message"></div>
+</div>
+
+<div class="form-container" id="editSection" style="display: none;">
+    <input type="hidden" id="userId" />
+
+    <input type="text" id="name" placeholder="Name" disabled>
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit Name</span>
+        <label class="switch"><input type="checkbox" id="toggleName" onchange="toggleField('name')"><span class="slider"></span></label>
+    </div>
+
+    <input type="text" id="email" placeholder="Email" disabled>
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit Email</span>
+        <label class="switch"><input type="checkbox" id="toggleEmail" onchange="toggleField('email')"><span class="slider"></span></label>
+    </div>
+
+    <select id="role" disabled>
+        <option value="MEMBER">Member</option>
+        <option value="ADMIN">Admin</option>
+    </select>
+    <div class="toggle-wrapper">
+        <span class="toggle-label">Edit Role</span>
+        <label class="switch"><input type="checkbox" id="toggleRole" onchange="toggleField('role')"><span class="slider"></span></label>
+    </div>
+
+    <button class="btn" onclick="updateUser()">✅ Update User</button>
+    <div id="updateMessage" class="message"></div>
+</div>
+
+<script>
+    function toggleField(id) {
+        document.getElementById(id).disabled = !document.getElementById("toggle" + capitalize(id)).checked;
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function searchUser() {
+        const val = document.getElementById("searchValue").value.trim();
+        const msg = document.getElementById("searchMessage");
+        const updateMsg = document.getElementById("updateMessage");
+        const section = document.getElementById("editSection");
+        section.style.display = "none";
+        msg.innerHTML = "";
+        updateMsg.innerHTML = "";
+
+        if (!val) {
+            msg.innerHTML = `<div class="error">❌ Please enter a value to search</div>`;
+            return;
+        }
+
+        function display(user) {
+            document.getElementById("userId").value = user.id;
+            document.getElementById("name").value = user.name;
+            document.getElementById("email").value = user.email;
+            document.getElementById("role").value = user.role;
+
+            // Reset all fields disabled and toggle switches off
+            ["name", "email", "role"].forEach(id => {
+                document.getElementById(id).disabled = true;
+                document.getElementById("toggle" + capitalize(id)).checked = false;
+            });
+
+            section.style.display = "block";
+        }
+
+        fetch(`/api/users/${val}`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => display(data))
+            .catch(() => {
+                fetch(`/api/users/email/${val}`)
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(data => display(data))
+                    .catch(() => {
+                        fetch(`/api/users/name/${val}`)
+                            .then(r => r.ok ? r.json() : Promise.reject())
+                            .then(data => {
+                                if (Array.isArray(data) && data.length > 0) {
+                                    display(data[0]);
+                                } else {
+                                    throw new Error();
+                                }
+                            })
+                            .catch(() => {
+                                msg.innerHTML = `<div class="error">❌ User not found</div>`;
+                            });
+                    });
+            });
+    }
+
+    function updateUser() {
+        const id = document.getElementById("userId").value;
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const role = document.getElementById("role").value;
+        const updateMsg = document.getElementById("updateMessage");
+
+        updateMsg.innerHTML = "";
+
+        if (!id || !name || !email || !role) {
+            updateMsg.innerHTML = `<div class="error">❌ All fields must be filled</div>`;
+            return;
+        }
+
+        fetch(`/api/users/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, role })
+        })
+        .then(res => {
+            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+            return res.json();
+        })
+        .then(data => {
+            updateMsg.innerHTML = `<div class="success">✅ User updated successfully</div>`;
+        })
+        .catch(err => {
+            updateMsg.innerHTML = `<div class="error">❌ Failed to update<br>${err.message}</div>`;
+        });
+    }
+</script>
+
+</body>
+</html>
