@@ -16,7 +16,23 @@ public class BookDTO {
         return id;
     }
 
-    public void setId(Long id) {
+    public String getIsbn() {
+		return isbn;
+	}
+
+	public void setIsbn(String isbn) {
+		this.isbn = isbn;
+	}
+
+	public List<Long> getLoanIds() {
+		return loanIds;
+	}
+
+	public void setLoanIds(List<Long> loanIds) {
+		this.loanIds = loanIds;
+	}
+
+	public void setId(Long id) {
         this.id = id;
     }
 
@@ -36,14 +52,7 @@ public class BookDTO {
         this.author = author;
     }
 
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public void setIsbn(String isbn) {
-        this.isbn = isbn;
-    }
-
+   
     public boolean isAvailable() {
         return available;
     }

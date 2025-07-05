@@ -10,10 +10,19 @@ public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private  String isbn;
+    
     
 	private String title;
-    private String author;
+	private String isbn;
+    public String getIsbn() {
+		return isbn;
+	}
+
+	public void setIsbn(String isbn) {
+		this.isbn = isbn;
+	}
+
+	private String author;
     private boolean available;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
@@ -58,12 +67,7 @@ public class Book {
     public void setLoans(List<Loan> loans) {
         this.loans = loans;
     }
-    public String getIsbn() {
-		return isbn;
-	}
+    
 
-	public void setIsbn(String isbn) {
-		isbn = isbn;
-	}
-
+	
 }
