@@ -21,7 +21,7 @@ public class BookUiController {
 	
 	@GetMapping("/create")
 	public String createBook() {
-		return "CreateBook.html";
+		return "createBook.html";
 		
 	}
 	@GetMapping("/allview")
