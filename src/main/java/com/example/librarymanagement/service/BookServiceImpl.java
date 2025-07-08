@@ -3,7 +3,6 @@ package com.example.librarymanagement.service;
 import com.example.librarymanagement.dto.BookDTO;
 import com.example.librarymanagement.entity.Book;
 import com.example.librarymanagement.repository.BookRepository;
-import com.example.librarymanagement.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -76,16 +75,34 @@ public class BookServiceImpl implements BookService {
         bookRepository.deleteById(id);
     }
 
-	@Override
-	public List<BookDTO> getBookByAuthor(String Author) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<BookDTO> getBookByAuthor(String author) {
+        return bookRepository.findByAuthor(author)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
-	@Override
-	public List<BookDTO> getBookByAvaliable(Boolean bool) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<BookDTO> getBookByAvailability(boolean available) {
+        return bookRepository.findByAvailable(available)
+        		.stream()
+        		.map(this::convertToDTO)
+        		.collect(Collectors.toList());
+        
+    }
 
+    @Override
+    public Optional<BookDTO> getBookByIsbn(String isbn) {
+        return bookRepository.findByIsbn(isbn)
+                .map(this::convertToDTO);
+    }
+
+    @Override
+    public List<BookDTO> getBookByTitle(String title) {
+        return bookRepository.findByTitleContainingIgnoreCase(title)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 }
